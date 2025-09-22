@@ -4,6 +4,27 @@ import openpyxl
 input_file = "C:/Users/Ian/Documents/Python_scripts/Layouts/log-display_elabel_brief.txt"
 output_file = "elabel_brief.xlsx"
 
+# Extraer solo el bloque de "display elabel brief"
+with open(input_file, "r", encoding="utf-8") as f:
+    lines = f.readlines()
+
+start_cmd = "display elabel brief"
+capture = False
+dash_count = 0
+block = []
+
+for line in lines:
+    if start_cmd in line:
+        capture = True
+    if capture:
+        block.append(line)
+        # Detecta línea compuesta solo de guiones (punteada)
+        if set(line.strip()) == {"-"}:
+            dash_count += 1
+            if dash_count == 3:  # tercera línea de guiones = fin del bloque
+                capture = False
+                break  # dejamos de leer después de la sección
+
 # Crear libro de Excel
 workbook = openpyxl.Workbook()
 sheet = workbook.active
@@ -36,3 +57,4 @@ with open(input_file, "r", encoding="utf-8") as f:
 # Guardar Excel
 workbook.save(output_file)
 print(f"✅ Archivo Excel generado: {output_file}")
+
