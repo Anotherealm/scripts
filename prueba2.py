@@ -1,7 +1,15 @@
 import openpyxl
+from tkinter import Tk, filedialog
 
-# Archivos de entrada y salida
-input_file = "C:/Users/Ian/Documents/Python_scripts/Layouts/log-display_elabel_brief.txt"
+Tk().withdraw()  # Ocultar ventana principal
+input_file = filedialog.askopenfilename(
+    title="Input filee",
+    filetypes=[("Archivos de log o texto", "*.log *.txt")]
+)
+
+if not input_file:
+    raise ValueError("⚠️ No se seleccionó ningún archivo")
+
 output_file = "elabel_brief.xlsx"
 
 # Extraer solo el bloque de "display elabel brief"
@@ -33,26 +41,26 @@ sheet.title = "Elabel Brief"
 # Escribir encabezados
 sheet.append(["Slot", "Description"])
 
-with open(input_file, "r", encoding="utf-8") as f:
-    for line in f:
-        line = line.strip()
-        # Saltar líneas vacías, separadores o encabezados
-        if not line or set(line) == {"-"} or line.startswith("<") or "Slot" in line or "Elabel" in line:
-            continue
-        
-        parts = line.split()
-        if len(parts) >= 4:
-            # Caso LPU / PIC / MPU / SFU / PWR / FAN
-            if parts[0] in ["LPU", "PIC", "MPU", "SFU", "PWR", "FAN"]:
-                slot = parts[0] + parts[1]   # Ej: LPU1, PIC0
-                description = " ".join(parts[4:])  # Ignorar secciones BoardType y BarCode
-            else:
-                # Caso PEM0 / PEM1 → no tienen número separado
-                slot = parts[0]
-                description = " ".join(parts[2:])  # Ignorar secciones BoardType y BarCode
-            
-            # Guardar fila solo si hay descripción
-            sheet.append([slot, description])
+# Procesar solo el bloque capturado
+for line in block:
+    line = line.strip()
+    # Saltar encabezados y separadores
+    if not line or set(line) == {"-"} or line.startswith("<") or "Slot" in line or "Elabel" in line:
+        continue
+
+    parts = line.split()
+    if len(parts) >= 4:
+        # Caso LPU / PIC / MPU / SFU / PWR / FAN
+        if parts[0] in ["LPU", "PIC", "MPU", "SFU", "PWR", "FAN"]:
+            slot = parts[0] + parts[1]   # Ej: LPU1, PIC0
+            description = " ".join(parts[4:])  # saltar BoardType y BarCode
+        else:
+            # Caso PEM0 / PEM1 → no tienen número separado
+            slot = parts[0]
+            description = " ".join(parts[2:])  # saltar BoardType y BarCode
+
+        # Guardar fila en Excel
+        sheet.append([slot, description])
 
 # Guardar Excel
 workbook.save(output_file)
